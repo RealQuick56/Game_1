@@ -1,0 +1,29 @@
+{
+   "button":
+   {
+
+       "colours":
+       {
+         "normal_bg": "#dbd7d2",
+         "hovered_bg": "#8b8c7a",
+         "active_bg": "#78866b",
+         "normal_text": "#000000"
+       },
+       "misc":
+       {
+         "shape": "rounded_rectangle",
+         "shape_corner_radius": "10",
+         "border_width": "10"
+       }
+   },
+
+  "window":
+  {
+  "misc":
+       {
+         "shape": "rounded_rectangle",
+         "shape_corner_radius": "5",
+         "border_width": "10"
+       }
+  }
+}
