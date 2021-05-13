@@ -228,7 +228,7 @@ class Player(pygame.sprite.Sprite):
                 self.rect[0] -= CELL
 
 
-#Main loop
+#Main loops
 breaf = True
 main = True
 start_page = False
