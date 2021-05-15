@@ -3,7 +3,6 @@ import pygame_gui
 import os
 
 
-
 FPS = 60
 LEFT = 10
 TOP = 10
@@ -117,8 +116,10 @@ btn_info = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect(width // 
 manager_levels = pygame_gui.UIManager((width, height), 'theme.json')
 btn_map_3 = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect(width - width // 3, height // 3,
                                         width // 6, height // 14), manager=manager_levels, text='MAP 3')
+btn_map_3.disable()
 btn_map_2 = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect(width - (width // 3 * 1.75), height // 3,
-                                        width // 6, height // 14), manager=manager_levels, text='MAP 2')
+                                        width // 6, height // 14), manager=manager_levels, text='MAP 2', )
+btn_map_2.disable()
 btn_map_1 = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect(width - (width // 3 * 2.5), height // 3,
                                         width // 6, height // 14), manager=manager_levels, text='MAP 1')
 btn_back = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect(width // 10, height // 1.2,
@@ -134,13 +135,20 @@ btn_back_to_menu = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect(w
 manager_setting = pygame_gui.UIManager((width, height), 'theme.json')
 btn_back_from_set_to_menu = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect(width // 3, height - height // 3,
                                         width // 3, height // 12), manager=manager_setting, text='BACK TO MENU')
+manager_game_finish = pygame_gui.UIManager((width, height), 'theme.json')
+btn_finish = pygame_gui.elements.UIButton(relative_rect=pygame.rect.Rect(width // 3, height - height // 3,
+                                        width // 3, height // 12), manager=manager_game_finish, text='CONTINUE')
 
-all_sprites = pygame.sprite.Group()
-board = Board()
+breaf_sprites = pygame.sprite.Group()
+secret_sprites = pygame.sprite.Group()
 boarded = Step_Board()
 main_label = Label()
+secret_board = Board()
+secret_cursor = Cursor(secret_board)
+board = Board()
 cursor = Cursor(board)
-all_sprites.add(cursor, board)
+breaf_sprites.add(cursor, board)
+secret_sprites.add(secret_cursor, secret_board)
 
 text = f"""[i] Initializing ...
 [i] Entering ghost mode ...
@@ -157,9 +165,24 @@ Press 'q' to continue ...
 Waiting ...
 
 """
+secret_text = """You should't be here ...
+You don't play this game ...
+What are you searching?
+What you want to find?
+You very small for it!
+Don't try to find a new info about it ...
+Otherwise you will have a problems ...
+Big Problemsssssssss ...
+Please, be a good person, press 'Q' to continue"""
+secret_cursor.write(secret_text)
 cursor.write(text)
 carts = len(os.listdir(os.chdir('data/fonts')))
 os.chdir('..')
+
+
+class Point(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
 
 
 class Player(pygame.sprite.Sprite):
@@ -171,6 +194,7 @@ class Player(pygame.sprite.Sprite):
             for j in range(len((self.level_map[i]))):
                 if self.level_map[i][j] == '@':
                     self.x, self.y = i, j
+                    break
         self.rect = self.image.get_rect(topleft=(LEFT + CELL * self.x, TOP + CELL * self.y))
         self.image.set_colorkey('white')
         self.mask = pygame.mask.from_surface(self.image)
@@ -178,6 +202,7 @@ class Player(pygame.sprite.Sprite):
     def move_down(self):
         x = (self.rect.left - LEFT) // CELL
         y = (self.rect.top - TOP) // CELL
+        level_map[x][y] = '.'
         if self.rect.top == (len(self.level_map[x]) - 1) * CELL + TOP and self.level_map[x][0] != '#':
             self.rect[1] = TOP
         elif self.rect.top == (len(self.level_map[x]) - 1) * CELL + TOP and self.level_map[x][0] == '#':
@@ -187,10 +212,12 @@ class Player(pygame.sprite.Sprite):
                 pass
             else:
                 self.rect[1] += CELL
+        level_map[(self.rect[0] - LEFT) // CELL][(self.rect[1] - TOP) // CELL] = '@'
 
     def move_up(self):
         x = (self.rect.left - LEFT) // CELL
         y = (self.rect.top - TOP) // CELL
+        level_map[x][y] = '.'
         if self.rect.top == TOP and self.level_map[x][len(self.level_map[x]) - 1] != '#':
             self.rect[1] = (len(self.level_map[x]) - 1) * CELL + TOP
         elif self.rect.top == TOP and self.level_map[x][len(self.level_map[x]) - 1] == '#':
@@ -200,10 +227,12 @@ class Player(pygame.sprite.Sprite):
                 pass
             else:
                 self.rect[1] -= CELL
+        level_map[(self.rect[0] - LEFT) // CELL][(self.rect[1] - TOP) // CELL] = '@'
 
     def move_right(self):
         x = (self.rect.left - LEFT) // CELL
         y = (self.rect.top - TOP) // CELL
+        level_map[x][y] = '.'
         if self.rect.left == (len(self.level_map) - 1) * CELL + LEFT and self.level_map[0][y] != '#':
             self.rect[0] = LEFT
         elif self.rect.left == (len(self.level_map) - 1) * CELL + LEFT and self.level_map[0][y] == '#':
@@ -213,10 +242,12 @@ class Player(pygame.sprite.Sprite):
                 pass
             else:
                 self.rect[0] += CELL
+        level_map[(self.rect[0] - LEFT) // CELL][(self.rect[1] - TOP) // CELL] = '@'
 
     def move_left(self):
         x = (self.rect.left - LEFT) // CELL
         y = (self.rect.top - TOP) // CELL
+        level_map[x][y] = '.'
         if self.rect.left == LEFT and self.level_map[len(self.level_map) - 1][y] != '#':
             self.rect[0] = (len(self.level_map) - 1) * CELL + LEFT
         elif self.rect.left == LEFT and self.level_map[len(self.level_map) - 1][y] == '#':
@@ -226,6 +257,19 @@ class Player(pygame.sprite.Sprite):
                 pass
             else:
                 self.rect[0] -= CELL
+        level_map[(self.rect[0] - LEFT) // CELL][(self.rect[1] - TOP) // CELL] = '@'
+
+
+class Square(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        pygame.sprite.Sprite.__init__(self)
+        self.x, self.y = coords
+        self.image = pygame.image.load('images/sprites/square.png').convert_alpha()
+        self.rect = self.image.get_rect(topleft=(LEFT + CELL * self.x, TOP + CELL * self.y))
+
+
+squares = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
 
 
 #Main loops
@@ -237,6 +281,7 @@ setting = False
 game = False
 main_sett = True
 level_map = None
+secret_scine = False
 while main:
     while breaf:
         for event in pygame.event.get():
@@ -244,11 +289,27 @@ while main:
                 if event.key == pygame.K_q:
                     breaf = False
                     start_page = True
-        all_sprites.update()
+        breaf_sprites.update()
         screen.fill((0, 0, 0))
-        all_sprites.draw(screen)
+        breaf_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(FPS * 2)
+    while secret_scine:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    secret_scine = False
+                    start_page = False
+                    breaf = False
+                    game = False
+                    setting = False
+                    select_levels = False
+                    main = False
+        secret_sprites.update()
+        screen.fill((0, 0, 0))
+        secret_sprites.draw(screen)
+        pygame.display.flip()
+        clock.tick(FPS // 2)
     while start_page:
         for event in pygame.event.get():
             if event.type == pygame.USEREVENT:
@@ -346,6 +407,15 @@ while main:
         pygame.display.flip()
     if level_map is not None:
         player = Player(level_map)
+        all_sprites.add(player)
+        for i in range(len(level_map)):
+            for j in range(len(level_map[i])):
+                if level_map[i][j] == '&':
+                    s = Square((i, j))
+                    squares.add(s)
+                    all_sprites.add(s)
+                if level_map[i][j] == '#':
+                    pass
     else:
         pass
     while game:
@@ -354,27 +424,27 @@ while main:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
-                    s = True
-                    while s:
+                    game_menu = True
+                    while game_menu:
                         for event_w in pygame.event.get():
                             if event_w.type == pygame.USEREVENT:
                                 if event_w.user_type == pygame_gui.UI_BUTTON_PRESSED:
                                     if event_w.ui_element == btn_back_to_menu:
-                                        s = False
+                                        game_menu = False
                                         breaf = False
                                         start_page = True
                                         select_levels = False
                                         game = False
                                         setting = False
                                     if event_w.ui_element == btn_return:
-                                        s = False
+                                        game_menu = False
                                         breaf = False
                                         start_page = True
                                         select_levels = False
                                         game = True
                                         setting = False
                                     if event_w.ui_element == btn_setting_from_game:
-                                        s = False
+                                        game_menu = False
                                         breaf = False
                                         start_page = False
                                         select_levels = False
@@ -385,9 +455,20 @@ while main:
                         screen.fill((0, 0, 0))
                         boarded.draw(level_map)
                         screen.blit(player.image, player.rect)
+                        for square in squares:
+                            screen.blit(square.image, square.rect)
                         manager_game.draw_ui(screen)
                         manager_game.update(FPS)
                         pygame.display.flip()
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_1] and keys[pygame.K_9] and keys[pygame.K_8] and keys[pygame.K_7]:
+                    breaf = False
+                    start_page = False
+                    select_levels = False
+                    game = False
+                    setting = False
+                    main_sett = False
+                    secret_scine = True
                 if event.key == pygame.K_w:
                     player.move_up()
                 if event.key == pygame.K_s:
@@ -398,6 +479,33 @@ while main:
                     player.move_right()
         screen.fill((0, 0, 0))
         screen.blit(player.image, player.rect)
+        for square in squares:
+            screen.blit(square.image, square.rect)
+        player.update()
+        squares.update()
+        hint = pygame.sprite.spritecollide(player, squares, True)
+        if hint and len(squares.sprites()) == 0:
+            game_finish = True
+            while game_finish:
+                for event in pygame.event.get():
+                    if event.type == pygame.USEREVENT:
+                        if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                            if event.ui_element == btn_finish:
+                                select_levels = True
+                                game = False
+                                game_finish = False
+                    manager_game_finish.process_events(event)
+                boarded.draw(level_map)
+                manager_game_finish.draw_ui(screen)
+                manager_game_finish.update(FPS)
+                pygame.display.flip()
+            underline = mapFile.name.index('_')
+            point = mapFile.name.index('.')          #Понять причину, по которой не исчезает картинка коробки, реализовать инвентарь для переноса коробок, камера за спрайтом
+            btns = manager_levels.get_sprite_group().sprites()
+            for btn in range(1, len(btns)):
+                if str(int(mapFile.name[underline + 1:point]) + 1) == btns[btn].text[len(btns[btn].text) - 1:]:
+                    btns[btn].enable()
+                    break
         boarded.draw(level_map)
         pygame.display.flip()
 pygame.quit()
